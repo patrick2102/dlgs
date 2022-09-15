@@ -18,16 +18,19 @@ env.render()
 
 # 2. Instantiate the Environment and Agent
 
-#env = gym.make('FrozenLake-v1', desc=None, map_name="4x4", is_slippery=True, render_mode='human')
-env = gym.make('FrozenLake-v1', desc=None, map_name="8x8", is_slippery=False)
+#env = gym.make('FrozenLake-v1', desc=None, map_name="8x8", is_slippery=False, render_mode='human')
+env = gym.make('FrozenLake8x8-v1', desc=None, map_name="8x8", is_slippery=False)
 
 action_size = env.action_space.n
 
 state_size = env.observation_space.n
 
 # 3. Set up the QTable:
-learning_rate = 0.2
+learning_rate = 0.1
 discount_rate = 0.9
+exploration = 0.9
+explore_reduction = 0.99
+explore_min = 0.01
 
 q_table = np.zeros((state_size, action_size))
 #q_table = np.random((state_size, action_size))
@@ -50,43 +53,63 @@ def get_best_action(state, action_space):
 """
 
 # 4. The Q-Learning algorithm training
-env.action_space.seed(42)
-observation, info = env.reset(seed=42)
-exploration = 0.25
+# env.action_space.seed(42)
+observation, info = env.reset()
+
+max_steps = 40
+
+won = False
 
 # observation, info = env.reset(seed=42)
 
 # Train
-for i in range(0, 10000):
+for i in range(0, 1000):
     last_observation = env.observation_space.sample()
     terminated = False
+    steps = 0
 
     while not terminated:
-        explo = random.uniform(0, 1)
 
-        if exploration < explo:
+        if exploration < random.uniform(0, 1):
             action = get_best_action(last_observation)
         else:
             action = env.action_space.sample()
+            # print(action)
 
         observation, reward, terminated, truncated, info = env.step(action)
+
+        if reward == 1 and not won:
+            print("Won!")
+            won = True
+
+        if terminated or truncated or steps >= max_steps:
+            if reward == 0:
+                update_q_table(-1, last_observation, action, observation)
+                last_observation = observation
+
+            if exploration > explore_min:
+                exploration *= explore_reduction
+
+            observation, info = env.reset()
+            break
 
         update_q_table(reward, last_observation, action, observation)
 
         last_observation = observation
+        steps += 1
 
-        if terminated or truncated:
-            observation, info = env.reset()
 
-    #print("index:", i)
+    print('\r index:', i)
+    # print('exploration: ', exploration)
+    # print(q_table)
 
 print(q_table)
 
-env = gym.make('FrozenLake-v1', desc=None, map_name="4x4", is_slippery=False, render_mode='human')
+env = gym.make('FrozenLake8x8-v1', desc=None, map_name="8x8", is_slippery=False, render_mode='human')
 
-observation, info = env.reset(seed=42)
+observation, info = env.reset()
 
-for i in range(0, 10):
+for i in range(0, 100):
     last_observation = env.observation_space.sample()
     terminated = False
 
