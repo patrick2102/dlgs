@@ -63,7 +63,7 @@ won = False
 # observation, info = env.reset(seed=42)
 
 # Train
-for i in range(0, 1000):
+for i in range(0, 50000):
     last_observation = env.observation_space.sample()
     terminated = False
     steps = 0
@@ -78,9 +78,9 @@ for i in range(0, 1000):
 
         observation, reward, terminated, truncated, info = env.step(action)
 
-        if reward == 1 and not won:
-            print("Won!")
-            won = True
+        #if reward == 1 and not won:
+        #    print("Won!")
+        #    won = True
 
         if terminated or truncated or steps >= max_steps:
             if reward == 0:
