@@ -2,7 +2,7 @@ from pickletools import optimize
 from queue import Queue
 from re import A, S
 
-from cv2 import sqrt
+#from cv2 import sqrt
 import gym
 import numpy as np
 import random
@@ -35,7 +35,6 @@ env.close()
 class Model(nn.Module):
     def __init__(self, observation_size, action_size):
         super(Model, self).__init__()
-        self.conv1 = nn.Conv2d(observation_size, 32, 3, 1)
         self.dense1 = nn.Linear(observation_size, 32)
         torch.nn.init.xavier_uniform_(self.dense1.weight)
         self.dense2 = nn.Linear(32, 32)
@@ -66,7 +65,7 @@ class Agent:
         self.optimizer = optim.Adam(self.model.parameters(), lr=1e-3)
         self.N = 2000
         self.explore_rate = 1.0
-        self.explore_decay = 0.9995
+        self.explore_decay = 0.99
         self.explore_min = 0.0
         self.discount_rate = 0.9
         #self.memory = Queue.queue(self.N)
@@ -97,6 +96,7 @@ class Agent:
         # minibatch = self.memory[]
 
         minibatch = random.sample(self.memory, batch_size)
+        self.optimizer.zero_grad()
 
         for i in range(batch_size):
             #total_loss += self.train(minibatch.pop())
@@ -153,6 +153,7 @@ def train(env, agent, episodes=10000, batch_size=64):  # train for many games
         iter = 0
         while not done:
             # 1. make a move in game.
+            
             action = agent.act(state)
 
             #print(action)
@@ -225,7 +226,7 @@ torch.save(agent.model.state_dict(), 'model4.pth')
 #torch.load('model2.pth')
 #agent = Agent(env.observation_space.shape[0], env.action_space.n)
 
-agent.model.state_dict = torch.load('model3.pth')
+agent.model.state_dict = torch.load('model4.pth')
 
 #print(agent.model.state_dict)
 

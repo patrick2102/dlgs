@@ -82,6 +82,7 @@ class Agent:
         s, a, r, s1, d = self.memory.pop()
         s = torch.tensor(s)
         r = torch.tensor(r)
+        self.optimizer.zero_grad()
         pred = self.model(s) 
         loss = self.criterion(pred, r)
         loss.backward()
