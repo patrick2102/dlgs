@@ -100,12 +100,10 @@ class Agent:
 
         for i in range(batch_size):
             #total_loss += self.train(minibatch.pop())
-            total_loss += self.train(minibatch[i])
+            self.train(minibatch[i])
 
         self.explore_rate *= self.explore_decay
         self.optimizer.step()
-
-        return total_loss/batch_size
 
         #for i in range(batch_size):
         #    self.train(self.memory[i])
@@ -131,7 +129,6 @@ class Agent:
         pred = self.model.forward(s)[a]
         loss = self.criterion(pred, v)
         loss.backward()
-        return int(loss)
 
 
 def train(env, agent, episodes=10000, batch_size=64):  # train for many games
@@ -176,7 +173,7 @@ def train(env, agent, episodes=10000, batch_size=64):  # train for many games
 
             # 4. if we have enough experiences in out memory, learn from a batch with replay.
             if len(agent.memory) >= batch_size:
-                total_loss += agent.replay(batch_size)
+                agent.replay(batch_size)
             iter += 1
         print("score: ", total_r)
         #print("avg loss: ", total_loss/iter)
