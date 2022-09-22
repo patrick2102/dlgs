@@ -17,23 +17,9 @@ from collections import deque  # for memory
 from tqdm import tqdm          # for progress bar
 
 
-env = gym.make('CartPole-v1', render_mode='human')
-"""
-for _ in tqdm(range(10)):
-    state, _ = env.reset()
-    done = False
-    while not done:
-        action = env.action_space.sample()
-        next_state, reward, done, _, _ = env.step(action)
-
-"""
-env.close()
-
-
-
 #Model:
 class Model(nn.Module):
-    def __init__(self, observation_size, action_size):
+    def __init__(self, observation_size, action_size, device="cpu"):
         super(Model, self).__init__()
         self.dense1 = nn.Linear(observation_size, 100)
         torch.nn.init.xavier_uniform_(self.dense1.weight)
@@ -42,7 +28,10 @@ class Model(nn.Module):
         self.dense3 = nn.Linear(100, action_size)
         torch.nn.init.xavier_uniform_(self.dense3.weight)
 
+        self.device = device
+
     def forward(self, x):
+        x = x.to(self.device)
         x = self.dense1(x)
         x = F.relu(x)
         x = self.dense2(x)
@@ -57,11 +46,16 @@ class Model(nn.Module):
         return torch.argmax(x)  # predict predictmost likely thing
 
 class Agent:
-    def __init__(self, observation_size, action_size):
+    def __init__(self, observation_size, action_size, device="cpu"):
         self.observation_size=observation_size
         self.action_size = action_size
         self.criterion = nn.MSELoss()
-        self.model = Model(observation_size, action_size)
+        self.model = Model(observation_size, action_size, device)
+        self.model.to(device)
+        if device == "cuda:0":
+            print("running with GPU")
+        else:
+            print("running with CPU")
         self.optimizer = optim.Adam(self.model.parameters(), lr=1e-3)
         self.N = 2000
         self.explore_rate = 0.15
@@ -69,7 +63,9 @@ class Agent:
         self.explore_min = 0.0
         self.discount_rate = 0.9
         #self.memory = Queue.queue(self.N)
+        #self.memory = deque([], maxlen=self.N)
         self.memory = deque([], maxlen=self.N)
+        self.device = device
         # self.memory = torch.tensor(np.array.zeros(self.N, 4)) # memory that stores N most new transitions
         # good place to store hyperparameters as attributes
 
@@ -107,21 +103,14 @@ class Agent:
             v = r + self.discount_rate * float(torch.max(self.model.forward(s1)))
         else:
             v = r
+        s = s.to(self.device)
+        v = v.to(self.device)
         pred = self.model.forward(s)[a]
         loss = self.criterion(pred, v)
         loss.backward()
 
 
 def train(env, agent, episodes=1000, batch_size=64):  # train for many games
-    plt.ion()
-    plt.show()
-    plt.xlabel('episode')
-    plt.ylabel('score')
-    plt.title('Cart pole')
-    # x axis values
-    x = []
-    # corresponding y axis values
-    y = []
 
     for e in tqdm(range(episodes)):
         state, _ = env.reset()
@@ -150,66 +139,16 @@ def train(env, agent, episodes=1000, batch_size=64):  # train for many games
             if len(agent.memory) >= batch_size:
                 agent.replay(batch_size)
             iter += 1
-        print("score: ", total_r)
-        #print("avg loss: ", total_loss/iter)
-        print("explore: ", agent.explore_rate)
-
-        # plotting
-        #x.append(e)
-        #y.append(total_r)
-
-        if e % 10 == 0:
-            plt.plot(x, y)
-
-            plt.draw()
-            plt.pause(0.01)
-
-        #if e % 100 == 0 and e != 0:
-            #print("Saving model...")
-            #torch.save(agent.model.state_dict(), 'model3.pth')
-        """
-        if len(x) == 100:
-            temp_x = []
-            temp_y = []
-            i = 0
-            while i < len(x):
-                avg = 0
-                for _ in range(10):
-                    avg += x[i]
-                    i += 1
-                avg /= 10
-                temp_x.append(avg)
-                temp_y.append(y[i])
-            x = temp_x
-            y = temp_y
-        """
-
         
     env.close()
 
 
 env = gym.make('CartPole-v1', render_mode='human')  # , render_mode='human')
-agent = Agent(env.observation_space.shape[0], env.action_space.n)
-#agent.model.state_dict = torch.load('model3.pth')
+
+
+if torch.cuda.is_available():
+    agent = Agent(env.observation_space.shape[0], env.action_space.n, device="cuda:0")
+else:
+    agent = Agent(env.observation_space.shape[0], env.action_space.n)
+
 train(env, agent)
-torch.save(agent.model.state_dict(), 'model4.pth')
-
-
-#torch.load('model2.pth')
-#agent = Agent(env.observation_space.shape[0], env.action_space.n)
-
-agent.model.state_dict = torch.load('model4.pth')
-
-#print(agent.model.state_dict)
-
-env = gym.make('CartPole-v1', render_mode='human')
-
-for _ in tqdm(range(100)):
-    state, _ = env.reset()
-    done = False
-    while not done:
-        action = agent.act(state, use_random=False)
-        # print(action)
-        state, reward, done, _, _ = env.step(action)
-
-env.close()

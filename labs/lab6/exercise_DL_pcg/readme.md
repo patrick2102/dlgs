@@ -17,7 +17,7 @@ I provide an already trained model in `./models/mario_vae_zdim_2_overfitted.pt`.
 ## Training a new model with a higher latent dimension
 
 I also provide a script which allows for training a VAE on another latent dimension. An example on how to use it:
-
+    
 ```
 python train_vae.py --z-dim=32 --max-epochs=300 --overfit
 ```

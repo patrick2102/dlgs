@@ -46,11 +46,11 @@ from plotting_utilities import plot_decoded_level
 
 # Loading the model
 #model_name = "mario_vae_zdim_2_overfitted"
-model_name = "mario_vae_zdim_2_epoch_10"
+#model_name = "mario_vae_zdim_2_epoch_10"
 #model_name = "mario_vae_zdim_2_epoch_20"
 #model_name = "mario_vae_zdim_2_epoch_100"
 #model_name = "mario_vae_zdim_2_epoch_200"
-#model_name = "mario_vae_zdim_2_final"
+model_name = "mario_vae_zdim_2_final"
 z_dim = 2
 vae = VAEMario(z_dim=z_dim)
 vae.load_state_dict(torch.load(f"./models/{model_name}.pt"))
