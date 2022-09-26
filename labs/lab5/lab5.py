@@ -53,8 +53,7 @@ class Model(nn.Module):
     def predict(self, x):              # actually make a prediction
         x = torch.tensor(x)
         x = self.forward(x)            # send x through neural net
-        #return torch.argmax(x)  # predict most likely thing
-        return torch.argmax(x)  # predict predictmost likely thing
+        return torch.argmax(x)  # predict most likely thing
 
 class Agent:
     def __init__(self, observation_size, action_size):
@@ -63,7 +62,7 @@ class Agent:
         self.criterion = nn.MSELoss()
         self.model = Model(observation_size, action_size)
         self.optimizer = optim.Adam(self.model.parameters(), lr=1e-3)
-        self.N = 2000
+        self.N = 10000
         self.explore_rate = 0.15
         self.explore_decay = 0.99
         self.explore_min = 0.0
@@ -108,11 +107,17 @@ class Agent:
         else:
             v = r
         pred = self.model.forward(s)[a]
+        #print("before")
+        #print("s:", s)
+        #print("a:", a)
+        #print("pred:", pred)
+        #print("v:", v)
         loss = self.criterion(pred, v)
+        #print("after")
         loss.backward()
 
 
-def train(env, agent, episodes=1000, batch_size=64):  # train for many games
+def train(env, agent, episodes=10000, batch_size=64):  # train for many games
     plt.ion()
     plt.show()
     plt.xlabel('episode')
@@ -155,14 +160,14 @@ def train(env, agent, episodes=1000, batch_size=64):  # train for many games
         print("explore: ", agent.explore_rate)
 
         # plotting
-        #x.append(e)
-        #y.append(total_r)
+        x.append(e)
+        y.append(total_r)
 
         if e % 10 == 0:
             plt.plot(x, y)
 
             plt.draw()
-            plt.pause(0.01)
+            plt.pause(0.1)
 
         #if e % 100 == 0 and e != 0:
             #print("Saving model...")
@@ -188,17 +193,17 @@ def train(env, agent, episodes=1000, batch_size=64):  # train for many games
     env.close()
 
 
-env = gym.make('CartPole-v1', render_mode='human')  # , render_mode='human')
+env = gym.make('CartPole-v1')#, render_mode='human')  # , render_mode='human')
 agent = Agent(env.observation_space.shape[0], env.action_space.n)
 #agent.model.state_dict = torch.load('model3.pth')
 train(env, agent)
-torch.save(agent.model.state_dict(), 'model4.pth')
+torch.save(agent.model.state_dict(), 'model1.pth')
 
 
 #torch.load('model2.pth')
 #agent = Agent(env.observation_space.shape[0], env.action_space.n)
 
-agent.model.state_dict = torch.load('model4.pth')
+agent.model.load_state_dict(torch.load('model1.pth'))
 
 #print(agent.model.state_dict)
 

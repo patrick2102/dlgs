@@ -12,6 +12,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
+import torch.multiprocessing as mp
 
 from collections import deque  # for memory
 from tqdm import tqdm          # for progress bar
@@ -57,6 +58,7 @@ class Agent:
         else:
             print("running with CPU")
         self.optimizer = optim.Adam(self.model.parameters(), lr=1e-3)
+        self.device = device
         self.N = 2000
         self.explore_rate = 0.15
         self.explore_decay = 0.99
@@ -64,13 +66,40 @@ class Agent:
         self.discount_rate = 0.9
         #self.memory = Queue.queue(self.N)
         #self.memory = deque([], maxlen=self.N)
+
+        #self.memory = torch.zeros([self.N, self.observation_size], dtype=torch.int64, device=self.device)
+        #self.memory = torch.zeros(self.N, self.observation_size)
+        self.memory2 = torch.zeros([self.N, 5])
         self.memory = deque([], maxlen=self.N)
-        self.device = device
+        #self.
+        #torch.stack(self.memory, torch.tensor([[1],[1],[1],[1],[1]]))
+        #self.memory = self.memory[1:]
+        #self.memory = self.memory[1:]
+        #self.memory = self.memory[1:]
+        #self.memory = torch.vstack([1, 1, 1, 1, 1])
+        print(self.memory2[0])
         # self.memory = torch.tensor(np.array.zeros(self.N, 4)) # memory that stores N most new transitions
         # good place to store hyperparameters as attributes
 
     def remember(self, state, action, reward, next_state, done):
-        self.memory.append([state, action, reward, next_state, done])
+        #i = torch.rand(0, self.N, dtype=torch.long)
+        #torch.cat((self.memory[1:], torch.tensor([state, action, reward, next_state, done])))
+        # self.memory[i] = torch.Tensor([state, action, reward, next_state, done])
+        #self.memory[1][0] = 0
+        i = 1
+        #self.memory2[1:]
+        #self.memory2 = self.memory[1:]
+        mem = [state, action, reward, next_state, done]
+        mem2 = torch.tensor(mem, dtype=torch.float32)
+        #mem = torch.Tensor([state, action, reward, next_state, done])
+        #self.memory2 = torch.stack()
+        #q = self.memory[i]
+        #s = self.memory[i][i]
+        #torch.cat((self.memory[1:], torch.tensor([state, action, reward, next_state, done])))
+        #print("test")
+        #torch.cat((self.memory[1:]))
+        #self.memory.index_add_(0, i, torch.Tensor([state, action, reward, next_state, done]))
+        #self.memory[i][0] = state  
 
     def act(self, state, use_random=True):
         if random.random() < self.explore_rate and use_random:
@@ -83,13 +112,10 @@ class Agent:
         return action
 
     def replay(self, batch_size):
-
-        total_loss = 0
-        minibatch = random.sample(self.memory, batch_size)
         self.optimizer.zero_grad()
 
-        for i in range(batch_size):
-            self.train(minibatch[i])
+        for _ in range(batch_size):
+            self.train(self.memory[0])
 
         self.optimizer.step()
 
@@ -116,7 +142,6 @@ def train(env, agent, episodes=1000, batch_size=64):  # train for many games
         state, _ = env.reset()
         done = False
         total_r = 0
-        total_loss = 0
         iter = 0
         while not done:
             # 1. make a move in game.
@@ -142,7 +167,9 @@ def train(env, agent, episodes=1000, batch_size=64):  # train for many games
         
     env.close()
 
+print(torch.cuda.is_available())
 
+"""
 env = gym.make('CartPole-v1', render_mode='human')  # , render_mode='human')
 
 
@@ -152,3 +179,4 @@ else:
     agent = Agent(env.observation_space.shape[0], env.action_space.n)
 
 train(env, agent)
+"""
