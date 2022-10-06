@@ -35,11 +35,11 @@ env.close()
 class Model(nn.Module):
     def __init__(self, observation_size, action_size):
         super(Model, self).__init__()
-        self.dense1 = nn.Linear(observation_size, 100)
+        self.dense1 = nn.Linear(observation_size, 32)
         torch.nn.init.xavier_uniform_(self.dense1.weight)
-        self.dense2 = nn.Linear(100, 100)
+        self.dense2 = nn.Linear(32, 32)
         torch.nn.init.xavier_uniform_(self.dense2.weight)
-        self.dense3 = nn.Linear(100, action_size)
+        self.dense3 = nn.Linear(32, action_size)
         torch.nn.init.xavier_uniform_(self.dense3.weight)
 
     def forward(self, x):
@@ -48,6 +48,7 @@ class Model(nn.Module):
         x = self.dense2(x)
         x = F.relu(x)
         x = self.dense3(x)
+        x = F.relu(x)
         return x
 
     def predict(self, x):              # actually make a prediction
@@ -62,8 +63,8 @@ class Agent:
         self.criterion = nn.MSELoss()
         self.model = Model(observation_size, action_size)
         self.optimizer = optim.Adam(self.model.parameters(), lr=1e-3)
-        self.N = 10000
-        self.explore_rate = 0.15
+        self.N = 4000
+        self.explore_rate = 0.0
         self.explore_decay = 0.99
         self.explore_min = 0.0
         self.discount_rate = 0.9
