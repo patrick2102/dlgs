@@ -22,7 +22,6 @@ env.render()
 env = gym.make('FrozenLake8x8-v1', desc=None, map_name="8x8", is_slippery=False)
 
 action_size = env.action_space.n
-
 state_size = env.observation_space.n
 
 # 3. Set up the QTable:
@@ -33,8 +32,6 @@ explore_reduction = 0.99
 explore_min = 0.01
 
 q_table = np.zeros((state_size, action_size))
-#q_table = np.random((state_size, action_size))
-
 
 def update_q_table(reward, prev_state, action, state):
     q_table[prev_state, action] = q_table[prev_state, action] + learning_rate * \
@@ -42,15 +39,6 @@ def update_q_table(reward, prev_state, action, state):
 
 def get_best_action(state):
     return np.argmax(q_table[state])
-
-"""
-def get_best_action(state, action_space):
-    best_action = [-1] * 4
-    for a in action_space:
-        best_action[a] = q_table[state][a]
-    return np.argmax(best_action)
-
-"""
 
 # 4. The Q-Learning algorithm training
 # env.action_space.seed(42)
@@ -74,13 +62,8 @@ for i in range(0, 50000):
             action = get_best_action(last_observation)
         else:
             action = env.action_space.sample()
-            # print(action)
 
         observation, reward, terminated, truncated, info = env.step(action)
-
-        #if reward == 1 and not won:
-        #    print("Won!")
-        #    won = True
 
         if terminated or truncated or steps >= max_steps:
             if reward == 0:
