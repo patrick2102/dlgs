@@ -12,7 +12,7 @@ from torch.utils.data import TensorDataset, DataLoader
 import numpy as np
 from tqdm import tqdm
 
-from vae_mario import VAEMario
+from lab6.vae_mario import VAEMario
 
 # Data types.
 Tensor = torch.Tensor

@@ -4,7 +4,7 @@ import PIL
 import torch
 import numpy as np
 
-from vae_mario import VAEMario
+from lab6.vae_mario import VAEMario
 
 filepath = Path(__file__).parent.resolve()
 Tensor = torch.Tensor
